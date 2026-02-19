@@ -3,6 +3,9 @@ const bodyParser = require('body-parser');
 const redis = require('redis');
 const { Sequelize, Op } = require('sequelize');
 const EventModel = require('./models/Event');
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 
 const app = express();
 app.use(bodyParser.json());
@@ -18,7 +21,8 @@ const sequelize = new Sequelize('postgres://backofficeuser:@N12vte81@localhost:5
 const Event = EventModel(sequelize, Sequelize.DataTypes);
 
 // --- Allowed API keys ---
-const API_KEYS = new Set(['SUPERSECRETKEY123']);
+//const API_KEYS = new Set(['SUPERSECRETKEY123']);
+const API_KEYS = new Set(JSON.parse(process.env.API_KEYS || '[]'));
 
 // --- HTTP endpoint for tracking ---
 app.post('/track', async (req, res) => {
@@ -33,7 +37,7 @@ app.post('/track', async (req, res) => {
   }
 
   const event = { event_name, payload, host, created_at: new Date() };
-  console.log('event received:', event);
+  //console.log('event received:', event);
   try {
     await redisClient.rPush('events_queue', JSON.stringify(event));
     res.sendStatus(204); // fire-and-forget
